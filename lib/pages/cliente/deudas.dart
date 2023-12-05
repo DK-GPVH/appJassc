@@ -52,17 +52,7 @@ class _DeudasPageState extends State<DeudasPage> {
         }
         return deudas;
       } else {
-        deudas.add(Deudas(
-            "1",
-            data["propiedad"]["manzana"].toString(),
-            data["propiedad"]["lote"].toString(),
-            data["propiedad"]["zona"],
-            data["propiedad"]["categoria"],
-            data["propiedad"]["categoria_monto"].toString(),
-            "",
-            ""));
-
-        return deudas;
+        throw ("Usted no tiene deudas pendientes");
       }
     } else {
       throw Exception("Fallo conexion");
@@ -91,7 +81,7 @@ class _DeudasPageState extends State<DeudasPage> {
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                'Error en los datos',
+                snapshot.error.toString(),
                 style: TextStyle(color: Colors.blue),
               ),
             );

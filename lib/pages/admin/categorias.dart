@@ -18,6 +18,7 @@ class CategoriasPageAdmin extends StatefulWidget {
 }
 
 class _CategoriasPageAdminState extends State<CategoriasPageAdmin> {
+  TextEditingController inputSearch = TextEditingController(text: "");
   late Future<List<ListCategorias>> lista_categorias;
   Future<List<ListCategorias>> getCategorias() async {
     var url = Uri.parse(
@@ -85,6 +86,23 @@ class _CategoriasPageAdminState extends State<CategoriasPageAdmin> {
                       ],
                     ),
                   ),
+                  Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      child: TextField(
+                        controller: inputSearch,
+                        decoration: InputDecoration(
+                            hintText: "Buscar",
+                            icon: Icon(
+                              Icons.search_rounded,
+                              color: Colors.blue.shade600,
+                            ),
+                            helperText: "Busqueda categoria",
+                            border: OutlineInputBorder()),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      )),
                   Divider(
                     height: 10,
                     color: Colors.blue.shade800,
@@ -92,7 +110,9 @@ class _CategoriasPageAdminState extends State<CategoriasPageAdmin> {
                     indent: 15,
                     endIndent: 15,
                   ),
-                  Column(children: _listadoCategorias(snapshot.data))
+                  Column(
+                      children:
+                          _listadoCategorias(snapshot.data, inputSearch.text))
                 ]));
           } else if (snapshot.hasError) {
             return Center(
@@ -105,110 +125,221 @@ class _CategoriasPageAdminState extends State<CategoriasPageAdmin> {
         });
   }
 
-  List<Widget> _listadoCategorias(data) {
+  List<Widget> _listadoCategorias(data, input) {
     List<Widget> categorias = [];
     int iteracion = 0;
-    for (var categoria in data) {
-      iteracion++;
-      categorias.add(Container(
-        margin: EdgeInsets.all(10),
-        width: MediaQuery.of(context).size.width * 1,
-        alignment: Alignment.topLeft,
-        decoration: BoxDecoration(
-            color: Colors.blue.shade600,
-            border: Border.all(width: 3, color: Colors.black45),
-            borderRadius: BorderRadius.circular(20)),
-        child: Row(
-          children: [
-            Container(
-                width: MediaQuery.of(context).size.width * 0.55,
-                child: ListTile(
-                  leading: Container(
-                    decoration: BoxDecoration(
-                        color: Colors.cyan,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(width: 2, color: Colors.black54)),
-                    alignment: Alignment.center,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    child: Text(
-                      iteracion.toString(),
+    if (input.isNotEmpty) {
+      for (var categoria in data) {
+        iteracion++;
+        if (categoria.descripcion.toLowerCase().contains(input.toLowerCase()) ||
+            categoria.monto_correspondiente.contains(input)) {
+          categorias.add(Container(
+            margin: EdgeInsets.all(10),
+            width: MediaQuery.of(context).size.width * 1,
+            alignment: Alignment.topLeft,
+            decoration: BoxDecoration(
+                color: Colors.blue.shade600,
+                border: Border.all(width: 3, color: Colors.black45),
+                borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              children: [
+                Container(
+                    width: MediaQuery.of(context).size.width * 0.55,
+                    child: ListTile(
+                      leading: Container(
+                        decoration: BoxDecoration(
+                            color: Colors.cyan,
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                                Border.all(width: 2, color: Colors.black54)),
+                        alignment: Alignment.center,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        child: Text(
+                          iteracion.toString(),
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.fade,
+                        ),
+                      ),
+                      title: Text(
+                        categoria.descripcion,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        "Monto : ${categoria.monto_correspondiente}",
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    )),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.35,
+                  alignment: Alignment.center,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.10,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
+                            onPressed: () {
+                              _detalleCategoria(context, categoria.id);
+                            },
+                            icon: Icon(
+                              Icons.remove_red_eye_rounded,
+                              color: Colors.blue,
+                              size: 25,
+                            )),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.10,
+                        decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.symmetric(
+                                horizontal:
+                                    BorderSide(width: 1, color: Colors.black))),
+                        child: IconButton(
+                            onPressed: () {
+                              _editCategorias(context, categoria.id);
+                            },
+                            icon: Icon(
+                              Icons.edit,
+                              color: Colors.black,
+                              size: 25,
+                            )),
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width * 0.10,
+                          decoration: BoxDecoration(
+                              color: Colors.red,
+                              border:
+                                  Border.all(width: 1, color: Colors.black)),
+                          child: IconButton(
+                              onPressed: () {
+                                _showDelete(
+                                    categoria.id, categoria.descripcion);
+                              },
+                              icon: Icon(
+                                Icons.delete_forever_rounded,
+                                color: Colors.white,
+                                size: 25,
+                              )))
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ));
+        }
+      }
+    } else {
+      for (var categoria in data) {
+        iteracion++;
+        categorias.add(Container(
+          margin: EdgeInsets.all(10),
+          width: MediaQuery.of(context).size.width * 1,
+          alignment: Alignment.topLeft,
+          decoration: BoxDecoration(
+              color: Colors.blue.shade600,
+              border: Border.all(width: 3, color: Colors.black45),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(
+            children: [
+              Container(
+                  width: MediaQuery.of(context).size.width * 0.55,
+                  child: ListTile(
+                    leading: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.cyan,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(width: 2, color: Colors.black54)),
+                      alignment: Alignment.center,
+                      width: MediaQuery.of(context).size.width * 0.1,
+                      child: Text(
+                        iteracion.toString(),
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
+                    title: Text(
+                      categoria.descripcion,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "Monto : ${categoria.monto_correspondiente}",
                       style: TextStyle(
                           color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.fade,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
                     ),
-                  ),
-                  title: Text(
-                    categoria.descripcion,
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    "Monto : ${categoria.monto_correspondiente}",
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500),
-                  ),
-                )),
-            Container(
-              width: MediaQuery.of(context).size.width * 0.35,
-              alignment: Alignment.center,
-              child: Row(
-                children: [
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.10,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(width: 1, color: Colors.black)),
-                    child: IconButton(
-                        onPressed: () {
-                          _detalleCategoria(context, categoria.id);
-                        },
-                        icon: Icon(
-                          Icons.remove_red_eye_rounded,
-                          color: Colors.blue,
-                          size: 25,
-                        )),
-                  ),
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.10,
-                    decoration: BoxDecoration(
-                        color: Colors.amber,
-                        border: Border.symmetric(
-                            horizontal:
-                                BorderSide(width: 1, color: Colors.black))),
-                    child: IconButton(
-                        onPressed: () {
-                          _editCategorias(context, categoria.id);
-                        },
-                        icon: Icon(
-                          Icons.edit,
-                          color: Colors.black,
-                          size: 25,
-                        )),
-                  ),
-                  Container(
+                  )),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.35,
+                alignment: Alignment.center,
+                child: Row(
+                  children: [
+                    Container(
                       width: MediaQuery.of(context).size.width * 0.10,
                       decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: Colors.white,
                           border: Border.all(width: 1, color: Colors.black)),
                       child: IconButton(
                           onPressed: () {
-                            _showDelete(categoria.id, categoria.descripcion);
+                            _detalleCategoria(context, categoria.id);
                           },
                           icon: Icon(
-                            Icons.delete_forever_rounded,
-                            color: Colors.white,
+                            Icons.remove_red_eye_rounded,
+                            color: Colors.blue,
                             size: 25,
-                          )))
-                ],
-              ),
-            )
-          ],
-        ),
-      ));
+                          )),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.10,
+                      decoration: BoxDecoration(
+                          color: Colors.amber,
+                          border: Border.symmetric(
+                              horizontal:
+                                  BorderSide(width: 1, color: Colors.black))),
+                      child: IconButton(
+                          onPressed: () {
+                            _editCategorias(context, categoria.id);
+                          },
+                          icon: Icon(
+                            Icons.edit,
+                            color: Colors.black,
+                            size: 25,
+                          )),
+                    ),
+                    Container(
+                        width: MediaQuery.of(context).size.width * 0.10,
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
+                            onPressed: () {
+                              _showDelete(categoria.id, categoria.descripcion);
+                            },
+                            icon: Icon(
+                              Icons.delete_forever_rounded,
+                              color: Colors.white,
+                              size: 25,
+                            )))
+                  ],
+                ),
+              )
+            ],
+          ),
+        ));
+      }
     }
     return categorias;
   }

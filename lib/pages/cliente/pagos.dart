@@ -24,7 +24,7 @@ class _PagosPageState extends State<PagosPage> {
   late Future<List<Pagos>> lista_pagos;
   Future<List<Pagos>> listarPagos() async {
     var url = Uri.parse(
-        "https://phplaravel-1149125-3997241.cloudwaysapps.com/api/propiedades/${manzana.text}/${lote.text}/${suministro.text}");
+        "https://phplaravel-1149125-3997241.cloudwaysapps.com/api/propiedades/${widget.manzana}/${widget.lote}/${widget.suministro}");
     var response = await http.get(url, headers: {
       "Content-type": "application/json",
       "Accept": "application/json",
@@ -32,6 +32,7 @@ class _PagosPageState extends State<PagosPage> {
     String body = utf8.decode(response.bodyBytes);
     final data = jsonDecode(body);
     if (data["res"]) {
+      print(data);
       var newurl = Uri.parse(
           "https://phplaravel-1149125-3997241.cloudwaysapps.com/api/pagos/${data["propiedad"]["id"]}");
       var newresponse = await http.get(newurl, headers: {
@@ -49,7 +50,7 @@ class _PagosPageState extends State<PagosPage> {
           for (var i = 0; i < propiedad_pagos.length; i++) {
             pagos.add(Pagos(
                 propiedad_pagos[i]["created_at"].toString(),
-                propiedad_pagos[i]["descripcion"],
+                propiedad_pagos[i]["descripcion"].toString(),
                 propiedad_pagos[i]["tipo_pago"].toString(),
                 propiedad_pagos[i]["estado"].toString(),
                 propiedad_pagos[i]["monto"].toString()));
@@ -63,6 +64,7 @@ class _PagosPageState extends State<PagosPage> {
         throw Exception("Error al mostrar datos");
       }
     } else {
+      print(data);
       throw Exception("Fallo");
     }
   }

@@ -7,6 +7,7 @@ import 'package:jassc/models/listpropiedades.dart';
 import 'package:http/http.dart' as http;
 import 'package:jassc/pages/admin/inicio.dart';
 import 'package:jassc/pages/login.dart';
+import 'package:flutter/services.dart';
 
 class PropiedadesPageAdmin extends StatefulWidget {
   final String email;
@@ -21,6 +22,7 @@ class PropiedadesPageAdmin extends StatefulWidget {
 }
 
 class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
+  TextEditingController inputSearch = TextEditingController(text: "");
   late Future<List<ListPropiedad>> lista_propiedades;
   Future<List<ListPropiedad>> getPropiedades() async {
     var url = Uri.parse(
@@ -94,6 +96,23 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                       ],
                     ),
                   ),
+                  Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      child: TextField(
+                        controller: inputSearch,
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                        decoration: InputDecoration(
+                            hintText: "Buscar",
+                            icon: Icon(
+                              Icons.search_rounded,
+                              color: Colors.blue.shade600,
+                            ),
+                            border: OutlineInputBorder(),
+                            helperText: "Busqueda propiedades"),
+                      )),
                   Divider(
                     height: 10,
                     color: Colors.blue.shade800,
@@ -101,7 +120,9 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                     indent: 15,
                     endIndent: 15,
                   ),
-                  Column(children: _listadoPropiedades(snapshot.data))
+                  Column(
+                      children:
+                          _listadoPropiedades(snapshot.data, inputSearch.text))
                 ]));
           } else if (snapshot.hasError) {
             return Center(
@@ -114,113 +135,227 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         });
   }
 
-  List<Widget> _listadoPropiedades(data) {
+  List<Widget> _listadoPropiedades(data, input) {
     List<Widget> propiedades = [];
     int i = 0;
-    for (var propiedad in data) {
-      i++;
-      propiedades.add(Container(
-        margin: EdgeInsets.all(10),
-        width: MediaQuery.of(context).size.width * 1,
-        alignment: Alignment.topLeft,
-        decoration: BoxDecoration(
-            color: Colors.blue.shade600,
-            border: Border.all(width: 3, color: Colors.black45),
-            borderRadius: BorderRadius.circular(20)),
-        child: Row(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width * 0.75,
-              child: ListTile(
-                leading: Container(
-                    decoration: BoxDecoration(
-                        color: Colors.cyan,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(width: 2, color: Colors.black54)),
-                    alignment: Alignment.center,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    child: Text(
-                      i.toString(),
+    if (input.isNotEmpty) {
+      for (var propiedad in data) {
+        if (propiedad.manzana.contains(input.toLowerCase()) ||
+            propiedad.lote.contains(input.toLowerCase()) ||
+            propiedad.zona.toLowerCase().contains(input.toLowerCase())) {
+          i++;
+          propiedades.add(Container(
+            margin: EdgeInsets.all(10),
+            width: MediaQuery.of(context).size.width * 1,
+            alignment: Alignment.topLeft,
+            decoration: BoxDecoration(
+                color: Colors.blue.shade600,
+                border: Border.all(width: 3, color: Colors.black45),
+                borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  child: ListTile(
+                    leading: Container(
+                        decoration: BoxDecoration(
+                            color: Colors.cyan,
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                                Border.all(width: 2, color: Colors.black54)),
+                        alignment: Alignment.center,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        child: Text(
+                          i.toString(),
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.fade,
+                        )),
+                    title: Text(
+                      "LOTE: ${propiedad.lote}\nMANZANA: ${propiedad.manzana}\nZONA: ${propiedad.zona}",
                       style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.fade,
-                    )),
-                title: Text(
-                  "LOTE: ${propiedad.lote}\nMANZANA: ${propiedad.manzana}\nZONA: ${propiedad.zona}",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  "\nFecha ins.: ${propiedad.fechains}\nFecha adeudo: ${propiedad.fechaadeudo}",
-                  style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            Container(
-              width: MediaQuery.of(context).size.width * 0.15,
-              alignment: Alignment.centerRight,
-              child: Column(
-                children: [
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(width: 1, color: Colors.black)),
-                    child: IconButton(
-                      onPressed: () {
-                        _detallePropiedad(context, propiedad.id);
-                      },
-                      icon: Icon(
-                        Icons.remove_red_eye_rounded,
-                        color: Colors.blue,
-                        size: 30,
-                      ),
-                      color: Colors.white,
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "\nFecha ins.: ${propiedad.fechains}\nFecha adeudo: ${propiedad.fechaadeudo}",
+                      style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    decoration: BoxDecoration(
-                        color: Colors.amber,
-                        border: Border.symmetric(
-                            vertical:
-                                BorderSide(width: 1, color: Colors.black))),
-                    child: IconButton(
-                        onPressed: () {
-                          _editPropiedad(context, propiedad.id);
-                        },
-                        icon: Icon(
-                          Icons.edit,
-                          color: Colors.black,
-                          size: 30,
-                        )),
-                  ),
-                  Container(
-                      width: MediaQuery.of(context).size.width * 0.15,
-                      decoration: BoxDecoration(
-                          color: Colors.red,
-                          border: Border.all(width: 1, color: Colors.black)),
-                      child: IconButton(
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.15,
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
                           onPressed: () {
-                            _showDelete(propiedad.id, propiedad.manzana,
-                                propiedad.lote, propiedad.zona);
+                            _detallePropiedad(context, propiedad.id);
                           },
                           icon: Icon(
-                            Icons.delete_forever_rounded,
-                            color: Colors.white,
+                            Icons.remove_red_eye_rounded,
+                            color: Colors.blue,
                             size: 30,
-                          )))
-                ],
+                          ),
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.symmetric(
+                                vertical:
+                                    BorderSide(width: 1, color: Colors.black))),
+                        child: IconButton(
+                            onPressed: () {
+                              _editPropiedad(context, propiedad.id);
+                            },
+                            icon: Icon(
+                              Icons.edit,
+                              color: Colors.black,
+                              size: 30,
+                            )),
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width * 0.15,
+                          decoration: BoxDecoration(
+                              color: Colors.red,
+                              border:
+                                  Border.all(width: 1, color: Colors.black)),
+                          child: IconButton(
+                              onPressed: () {
+                                _showDelete(propiedad.id, propiedad.manzana,
+                                    propiedad.lote, propiedad.zona);
+                              },
+                              icon: Icon(
+                                Icons.delete_forever_rounded,
+                                color: Colors.white,
+                                size: 30,
+                              )))
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ));
+        }
+      }
+    } else {
+      for (var propiedad in data) {
+        i++;
+        propiedades.add(Container(
+          margin: EdgeInsets.all(10),
+          width: MediaQuery.of(context).size.width * 1,
+          alignment: Alignment.topLeft,
+          decoration: BoxDecoration(
+              color: Colors.blue.shade600,
+              border: Border.all(width: 3, color: Colors.black45),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width * 0.75,
+                child: ListTile(
+                  leading: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.cyan,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(width: 2, color: Colors.black54)),
+                      alignment: Alignment.center,
+                      width: MediaQuery.of(context).size.width * 0.1,
+                      child: Text(
+                        i.toString(),
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.fade,
+                      )),
+                  title: Text(
+                    "LOTE: ${propiedad.lote}\nMANZANA: ${propiedad.manzana}\nZONA: ${propiedad.zona}",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    "\nFecha ins.: ${propiedad.fechains}\nFecha adeudo: ${propiedad.fechaadeudo}",
+                    style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
               ),
-            )
-          ],
-        ),
-      ));
+              Container(
+                width: MediaQuery.of(context).size.width * 0.15,
+                alignment: Alignment.centerRight,
+                child: Column(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.15,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(width: 1, color: Colors.black)),
+                      child: IconButton(
+                        onPressed: () {
+                          _detallePropiedad(context, propiedad.id);
+                        },
+                        icon: Icon(
+                          Icons.remove_red_eye_rounded,
+                          color: Colors.blue,
+                          size: 30,
+                        ),
+                        color: Colors.white,
+                      ),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.15,
+                      decoration: BoxDecoration(
+                          color: Colors.amber,
+                          border: Border.symmetric(
+                              vertical:
+                                  BorderSide(width: 1, color: Colors.black))),
+                      child: IconButton(
+                          onPressed: () {
+                            _editPropiedad(context, propiedad.id);
+                          },
+                          icon: Icon(
+                            Icons.edit,
+                            color: Colors.black,
+                            size: 30,
+                          )),
+                    ),
+                    Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
+                            onPressed: () {
+                              _showDelete(propiedad.id, propiedad.manzana,
+                                  propiedad.lote, propiedad.zona);
+                            },
+                            icon: Icon(
+                              Icons.delete_forever_rounded,
+                              color: Colors.white,
+                              size: 30,
+                            )))
+                  ],
+                ),
+              )
+            ],
+          ),
+        ));
+      }
     }
     return propiedades;
   }
@@ -453,7 +588,7 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
   var loteForm;
   var zonaForm;
   var suministroForm;
-
+  final _formKey = GlobalKey<FormState>();
   void _showEditForm(data) {
     manzanaForm =
         TextEditingController(text: data["data"]["manzana"].toString());
@@ -472,7 +607,7 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         context: context,
         initialDate: dateInscripcion,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(DateTime.now().year + 1),
       );
     }
 
@@ -481,7 +616,7 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         context: context,
         initialDate: dateDeuda,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(DateTime.now().year + 1),
       );
     }
 
@@ -510,9 +645,11 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: 'Manzana',
                           icon: Icon(Icons.edit_road_rounded),
@@ -524,8 +661,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: manzanaForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese una manzana';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: 'Lote',
                           icon: Icon(Icons.rounded_corner_rounded),
@@ -537,8 +684,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: loteForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese un lote';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
+                      keyboardType: TextInputType.text,
                       decoration: InputDecoration(
                           labelText: 'Zona',
                           icon: Icon(Icons.location_city_rounded),
@@ -550,6 +707,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: zonaForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
+                        LengthLimitingTextInputFormatter(1)
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese una zona';
+                        } else if (value.length != 1) {
+                          return 'Debe tener solo 1 caracter';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -563,6 +732,12 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: suministroForm,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese un suministro';
+                        }
+                        return null;
+                      },
                     ),
                     FutureBuilder<List<DropdownCategoriasModel>>(
                         future: _dropcategorias(),
@@ -703,17 +878,19 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         actions: <Widget>[
           ElevatedButton.icon(
             onPressed: () {
-              _actualizarPropiedad(
-                  data["data"]["id"],
-                  manzanaForm.text,
-                  loteForm.text,
-                  zonaForm.text,
-                  suministroForm.text,
-                  selectedActivo,
-                  dateInscripcion,
-                  dateDeuda,
-                  selectedCliente,
-                  selectedCategoria);
+              if (_formKey.currentState!.validate()) {
+                _actualizarPropiedad(
+                    data["data"]["id"],
+                    manzanaForm.text,
+                    loteForm.text,
+                    zonaForm.text,
+                    suministroForm.text,
+                    selectedActivo,
+                    dateInscripcion,
+                    dateDeuda,
+                    selectedCliente,
+                    selectedCategoria);
+              }
             },
             icon: Icon(Icons.save_rounded),
             label: Text("Guardar"),
@@ -1043,7 +1220,7 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         context: context,
         initialDate: dateInscripcion,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(DateTime.now().year + 1),
       );
     }
 
@@ -1052,10 +1229,11 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         context: context,
         initialDate: dateDeuda,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(DateTime.now().year + 1),
       );
     }
 
+    print(DateTime.now().year);
     void callDatePicker(state) async {
       var selectedDate = await getDatePickerInscripcionWidget();
       state(() {
@@ -1081,9 +1259,11 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: 'Manzana',
                           icon: Icon(Icons.edit_road_rounded),
@@ -1095,8 +1275,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: manzanaForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese una manzana';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           labelText: 'Lote',
                           icon: Icon(Icons.rounded_corner_rounded),
@@ -1108,8 +1298,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: loteForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese un lote';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
+                      keyboardType: TextInputType.text,
                       decoration: InputDecoration(
                           labelText: 'Zona',
                           icon: Icon(Icons.location_city_rounded),
@@ -1121,6 +1321,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: zonaForm,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-cA-C]')),
+                        LengthLimitingTextInputFormatter(1)
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese una zona';
+                        } else if (value.length != 1) {
+                          return 'Debe tener solo 1 caracter';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -1134,6 +1346,12 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: suministroForm,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese un suministro';
+                        }
+                        return null;
+                      },
                     ),
                     FutureBuilder<List<DropdownCategoriasModel>>(
                         future: _dropcategorias(),
@@ -1274,16 +1492,18 @@ class _PropiedadesPageAdminState extends State<PropiedadesPageAdmin> {
         actions: <Widget>[
           ElevatedButton.icon(
             onPressed: () {
-              _crearPropiedad(
-                  manzanaForm.text,
-                  loteForm.text,
-                  zonaForm.text,
-                  suministroForm.text,
-                  selectedActivo,
-                  dateInscripcion,
-                  dateDeuda,
-                  selectedCliente,
-                  selectedCategoria);
+              if (_formKey.currentState!.validate()) {
+                _crearPropiedad(
+                    manzanaForm.text,
+                    loteForm.text,
+                    zonaForm.text,
+                    suministroForm.text,
+                    selectedActivo,
+                    dateInscripcion,
+                    dateDeuda,
+                    selectedCliente,
+                    selectedCategoria);
+              }
             },
             icon: Icon(Icons.save_rounded),
             label: Text("Guardar"),

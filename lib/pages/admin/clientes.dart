@@ -6,6 +6,7 @@ import 'package:jassc/models/listclientes.dart';
 import 'package:jassc/models/dropdownTipoDocumentos.dart';
 import 'package:jassc/pages/admin/inicio.dart';
 import 'package:jassc/pages/login.dart';
+import 'package:flutter/services.dart';
 
 class ClientesPageAdmin extends StatefulWidget {
   final String email;
@@ -20,6 +21,7 @@ class ClientesPageAdmin extends StatefulWidget {
 }
 
 class _ClientesPageAdminState extends State<ClientesPageAdmin> {
+  TextEditingController inputSearch = TextEditingController(text: "");
   late Future<List<ListCliente>> lista_clientes;
   Future<List<ListCliente>> getClientes() async {
     var url = Uri.parse(
@@ -92,6 +94,23 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                       ],
                     ),
                   ),
+                  Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      child: TextField(
+                        controller: inputSearch,
+                        decoration: InputDecoration(
+                            hintText: "Buscar",
+                            icon: Icon(
+                              Icons.search_rounded,
+                              color: Colors.blue.shade600,
+                            ),
+                            border: OutlineInputBorder(),
+                            helperText: "Busqueda clientes"),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      )),
                   Divider(
                     height: 10,
                     color: Colors.blue.shade800,
@@ -99,7 +118,9 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                     indent: 15,
                     endIndent: 15,
                   ),
-                  Column(children: _listadoClientes(snapshot.data))
+                  Column(
+                      children:
+                          _listadoClientes(snapshot.data, inputSearch.text))
                 ]));
           } else if (snapshot.hasError) {
             return Center(
@@ -112,110 +133,222 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
         });
   }
 
-  List<Widget> _listadoClientes(data) {
+  List<Widget> _listadoClientes(data, input) {
     List<Widget> clientes = [];
     var iteracion = 0;
-    for (var cliente in data) {
-      iteracion++;
-      clientes.add(Container(
-        margin: EdgeInsets.all(10),
-        width: MediaQuery.of(context).size.width * 1,
-        alignment: Alignment.topLeft,
-        decoration: BoxDecoration(
-            color: Colors.blue.shade600,
-            border: Border.all(width: 3, color: Colors.black45),
-            borderRadius: BorderRadius.circular(20)),
-        child: Row(
-          children: [
-            Container(
-                width: MediaQuery.of(context).size.width * 0.75,
-                child: ListTile(
-                  leading: Container(
-                    decoration: BoxDecoration(
-                        color: Colors.cyan,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(width: 2, color: Colors.black54)),
-                    alignment: Alignment.center,
-                    width: MediaQuery.of(context).size.width * 0.1,
-                    child: Text(
-                      iteracion.toString(),
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.fade,
+    if (input.isNotEmpty) {
+      for (var cliente in data) {
+        if (cliente.nombre.toLowerCase().contains(input.toLowerCase()) ||
+            cliente.apellidop.toLowerCase().contains(input.toLowerCase()) ||
+            cliente.apellidom.toLowerCase().contains(input.toLowerCase()) ||
+            cliente.nrodocumento.contains(input.toLowerCase())) {
+          iteracion++;
+          clientes.add(Container(
+            margin: EdgeInsets.all(10),
+            width: MediaQuery.of(context).size.width * 1,
+            alignment: Alignment.topLeft,
+            decoration: BoxDecoration(
+                color: Colors.blue.shade600,
+                border: Border.all(width: 3, color: Colors.black45),
+                borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              children: [
+                Container(
+                    width: MediaQuery.of(context).size.width * 0.75,
+                    child: ListTile(
+                      leading: Container(
+                        decoration: BoxDecoration(
+                            color: Colors.cyan,
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                                Border.all(width: 2, color: Colors.black54)),
+                        alignment: Alignment.center,
+                        width: MediaQuery.of(context).size.width * 0.1,
+                        child: Text(
+                          iteracion.toString(),
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.fade,
+                        ),
+                      ),
+                      title: Text(
+                        "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
+                      ),
+                      subtitle: Text(
+                        "Nro. documento : ${cliente.nrodocumento}\nTelefono : ${cliente.telefono}",
+                        style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    )),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.15,
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
+                            onPressed: () {
+                              _detalleCliente(context, cliente.id);
+                            },
+                            icon: Icon(Icons.remove_red_eye_rounded,
+                                color: Colors.blue, size: 30)),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.symmetric(
+                                vertical:
+                                    BorderSide(width: 1, color: Colors.black))),
+                        child: IconButton(
+                            onPressed: () {
+                              _editClientes(context, cliente.id);
+                            },
+                            icon: Icon(
+                              Icons.edit,
+                              color: Colors.black,
+                              size: 30,
+                            )),
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width * 0.15,
+                          decoration: BoxDecoration(
+                              color: Colors.red,
+                              border:
+                                  Border.all(width: 1, color: Colors.black)),
+                          child: IconButton(
+                              onPressed: () {
+                                _showDelete(cliente.id,
+                                    "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}");
+                              },
+                              icon: Icon(
+                                Icons.delete_forever_rounded,
+                                color: Colors.white,
+                                size: 30,
+                              ))),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ));
+        }
+      }
+    } else {
+      for (var cliente in data) {
+        iteracion++;
+        clientes.add(Container(
+          margin: EdgeInsets.all(10),
+          width: MediaQuery.of(context).size.width * 1,
+          alignment: Alignment.topLeft,
+          decoration: BoxDecoration(
+              color: Colors.blue.shade600,
+              border: Border.all(width: 3, color: Colors.black45),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(
+            children: [
+              Container(
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  child: ListTile(
+                    leading: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.cyan,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(width: 2, color: Colors.black54)),
+                      alignment: Alignment.center,
+                      width: MediaQuery.of(context).size.width * 0.1,
+                      child: Text(
+                        iteracion.toString(),
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.fade,
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
-                  subtitle: Text(
-                    "Nro. documento : ${cliente.nrodocumento}\nTelefono : ${cliente.telefono}",
-                    style: TextStyle(
-                        color: Colors.black54,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500),
-                  ),
-                )),
-            Container(
-              width: MediaQuery.of(context).size.width * 0.15,
-              alignment: Alignment.centerRight,
-              child: Column(
-                children: [
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(width: 1, color: Colors.black)),
-                    child: IconButton(
-                        onPressed: () {
-                          _detalleCliente(context, cliente.id);
-                        },
-                        icon: Icon(Icons.remove_red_eye_rounded,
-                            color: Colors.blue, size: 30)),
-                  ),
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.15,
-                    decoration: BoxDecoration(
-                        color: Colors.amber,
-                        border: Border.symmetric(
-                            vertical:
-                                BorderSide(width: 1, color: Colors.black))),
-                    child: IconButton(
-                        onPressed: () {
-                          _editClientes(context, cliente.id);
-                        },
-                        icon: Icon(
-                          Icons.edit,
-                          color: Colors.black,
-                          size: 30,
-                        )),
-                  ),
-                  Container(
+                    title: Text(
+                      "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20),
+                    ),
+                    subtitle: Text(
+                      "Nro. documento : ${cliente.nrodocumento}\nTelefono : ${cliente.telefono}",
+                      style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  )),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.15,
+                alignment: Alignment.centerRight,
+                child: Column(
+                  children: [
+                    Container(
                       width: MediaQuery.of(context).size.width * 0.15,
                       decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: Colors.white,
                           border: Border.all(width: 1, color: Colors.black)),
                       child: IconButton(
                           onPressed: () {
-                            _showDelete(cliente.id,
-                                "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}");
+                            _detalleCliente(context, cliente.id);
+                          },
+                          icon: Icon(Icons.remove_red_eye_rounded,
+                              color: Colors.blue, size: 30)),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.15,
+                      decoration: BoxDecoration(
+                          color: Colors.amber,
+                          border: Border.symmetric(
+                              vertical:
+                                  BorderSide(width: 1, color: Colors.black))),
+                      child: IconButton(
+                          onPressed: () {
+                            _editClientes(context, cliente.id);
                           },
                           icon: Icon(
-                            Icons.delete_forever_rounded,
-                            color: Colors.white,
+                            Icons.edit,
+                            color: Colors.black,
                             size: 30,
-                          ))),
-                ],
-              ),
-            )
-          ],
-        ),
-      ));
+                          )),
+                    ),
+                    Container(
+                        width: MediaQuery.of(context).size.width * 0.15,
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            border: Border.all(width: 1, color: Colors.black)),
+                        child: IconButton(
+                            onPressed: () {
+                              _showDelete(cliente.id,
+                                  "${cliente.nombre} ${cliente.apellidop} ${cliente.apellidom}");
+                            },
+                            icon: Icon(
+                              Icons.delete_forever_rounded,
+                              color: Colors.white,
+                              size: 30,
+                            ))),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ));
+      }
     }
     return clientes;
   }
@@ -416,6 +549,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
   var numero_documento;
   var telefono;
   var nombre;
+  final _formKey = GlobalKey<FormState>();
   void _showEditForm(data) {
     nombre = TextEditingController(text: data["data"]["nombre"].toString());
     apellido_paterno = TextEditingController(text: data["data"]["apellidop"]);
@@ -432,7 +566,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
         context: context,
         initialDate: dateNacimiento,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(2006),
       );
     }
 
@@ -453,6 +587,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
@@ -467,6 +602,15 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: nombre,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingrese datos';
+                        }
+                        return null;
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))
+                      ],
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -480,6 +624,25 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: apellido_paterno,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese el texto';
+                        } else {
+                          int spaceCount = 0;
+                          for (int i = 0; i < value.length; i++) {
+                            if (value[i] == ' ') {
+                              spaceCount++;
+                            }
+                            if (spaceCount > 1) {
+                              return 'El texto no puede contener más de un espacio en blanco';
+                            }
+                          }
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -555,6 +718,35 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             }
                             return Colors.blue.shade800;
                           })),
+                      onChanged: (value) {
+                        int n;
+                        if (selectedTipoDocumento == 2) {
+                          n = 8;
+                        } else if (selectedTipoDocumento == 1) {
+                          n = 12;
+                        } else {
+                          n = 0;
+                        }
+                        if (value.length != n) {
+                          numero_documento.text = value.substring(0, n);
+                        }
+                      },
+                      validator: (value) {
+                        int n;
+                        if (selectedTipoDocumento == 2) {
+                          n = 8;
+                        } else if (selectedTipoDocumento == 1) {
+                          n = 12;
+                        } else {
+                          n = 0;
+                        }
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingrese datos';
+                        } else if (value.length != n) {
+                          return 'El dato debe tener $n caracteres';
+                        }
+                        return null;
+                      },
                       controller: numero_documento,
                     ),
                     TextFormField(
@@ -569,6 +761,20 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: telefono,
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.length != 9) {
+                          return "Debe tener 9 caracteres";
+                        } else if (!value.startsWith('9')) {
+                          return 'El valor debe empezar por 9';
+                        }
+                        return null;
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                 ),
@@ -579,15 +785,17 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
         actions: <Widget>[
           ElevatedButton.icon(
             onPressed: () {
-              _editarCliente(
-                  data["data"]["id"].toString(),
-                  nombre.text,
-                  apellido_paterno.text,
-                  apellido_materno.text,
-                  dateNacimiento,
-                  selectedTipoDocumento,
-                  numero_documento.text,
-                  telefono.text);
+              if (_formKey.currentState!.validate()) {
+                _editarCliente(
+                    data["data"]["id"].toString(),
+                    nombre.text,
+                    apellido_paterno.text,
+                    apellido_materno.text,
+                    dateNacimiento,
+                    selectedTipoDocumento,
+                    numero_documento.text,
+                    telefono.text);
+              }
             },
             icon: Icon(Icons.save_rounded),
             label: Text("Guardar"),
@@ -732,7 +940,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
   }
 
   void _showNewForm() {
-    dateNacimiento = DateTime.now();
+    dateNacimiento = DateTime(2004, 1, 1);
     nombre = TextEditingController(text: "");
     apellido_paterno = TextEditingController(text: "");
     apellido_materno = TextEditingController(text: "");
@@ -743,7 +951,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
         context: context,
         initialDate: dateNacimiento,
         firstDate: DateTime(1900),
-        lastDate: DateTime(2100),
+        lastDate: DateTime(2006),
       );
     }
 
@@ -764,6 +972,7 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
@@ -778,6 +987,15 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: nombre,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingrese datos';
+                        }
+                        return null;
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))
+                      ],
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -791,6 +1009,25 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: apellido_paterno,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese el texto';
+                        } else {
+                          int spaceCount = 0;
+                          for (int i = 0; i < value.length; i++) {
+                            if (value[i] == ' ') {
+                              spaceCount++;
+                            }
+                            if (spaceCount > 1) {
+                              return 'El texto no puede contener más de un espacio en blanco';
+                            }
+                          }
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       decoration: InputDecoration(
@@ -804,6 +1041,25 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: apellido_materno,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, ingrese el texto';
+                        } else {
+                          int spaceCount = 0;
+                          for (int i = 0; i < value.length; i++) {
+                            if (value[i] == ' ') {
+                              spaceCount++;
+                            }
+                            if (spaceCount > 1) {
+                              return 'El texto no puede contener más de un espacio en blanco';
+                            }
+                          }
+                        }
+                        return null;
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))
+                      ],
                     ),
                     Text("Fecha de nacimiento"),
                     Row(
@@ -824,38 +1080,42 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                         future: _dropTipoDocumentos(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
-                            return DropdownButtonFormField(
-                                decoration: InputDecoration(
-                                    labelText: 'Tipo de documento',
-                                    icon: Icon(Icons.assignment_ind_rounded),
-                                    iconColor: MaterialStateColor.resolveWith(
-                                        (Set<MaterialState> states) {
-                                      if (states
-                                          .contains(MaterialState.focused)) {
-                                        return Colors.yellow.shade800;
-                                      }
-                                      return Colors.blue.shade800;
-                                    })),
-                                value: selectedTipoDocumento,
-                                items: snapshot.data!.map((e) {
-                                  return DropdownMenuItem(
-                                    value: e.id,
-                                    child: Text(e.descripcion),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  selectedTipoDocumento = value;
-                                  setState(() {
-                                    selectedTipoDocumento;
-                                    print(selectedTipoDocumento);
-                                  });
-                                });
+                            return Column(children: [
+                              DropdownButtonFormField(
+                                  decoration: InputDecoration(
+                                      labelText: 'Tipo de documento',
+                                      icon: Icon(Icons.assignment_ind_rounded),
+                                      iconColor: MaterialStateColor.resolveWith(
+                                          (Set<MaterialState> states) {
+                                        if (states
+                                            .contains(MaterialState.focused)) {
+                                          return Colors.yellow.shade800;
+                                        }
+                                        return Colors.blue.shade800;
+                                      })),
+                                  value: selectedTipoDocumento,
+                                  items: snapshot.data!.map((e) {
+                                    return DropdownMenuItem(
+                                      value: e.id,
+                                      child: Text(e.descripcion),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    selectedTipoDocumento = value;
+                                    setState(() {
+                                      selectedTipoDocumento = value;
+                                      print(selectedTipoDocumento);
+                                    });
+                                  }),
+                            ]);
                           } else if (snapshot.hasError) {
                             return Text("Error ${snapshot.error}");
                           }
                           return const CircularProgressIndicator();
                         }),
                     TextFormField(
+                        maxLength: 12,
+                        keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                             labelText: 'Numero de Documento',
                             icon: Icon(Icons.branding_watermark_rounded),
@@ -866,8 +1126,38 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                               }
                               return Colors.blue.shade800;
                             })),
+                        onChanged: (value) {
+                          int n;
+                          if (selectedTipoDocumento == 2) {
+                            n = 8;
+                          } else if (selectedTipoDocumento == 1) {
+                            n = 12;
+                          } else {
+                            n = 0;
+                          }
+                          if (value.length != n) {
+                            numero_documento.text = value.substring(0, n);
+                          }
+                        },
+                        validator: (value) {
+                          int n;
+                          if (selectedTipoDocumento == 2) {
+                            n = 8;
+                          } else if (selectedTipoDocumento == 1) {
+                            n = 12;
+                          } else {
+                            n = 0;
+                          }
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingrese datos';
+                          } else if (value.length != n) {
+                            return 'El dato debe tener $n caracteres';
+                          }
+                          return null;
+                        },
                         controller: numero_documento),
                     TextFormField(
+                      maxLength: 9,
                       decoration: InputDecoration(
                           labelText: 'Telefono',
                           icon: Icon(Icons.contact_phone_rounded),
@@ -879,6 +1169,19 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
                             return Colors.blue.shade800;
                           })),
                       controller: telefono,
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.length != 9) {
+                          return "Debe tener 9 caracteres";
+                        } else if (!value.startsWith('9')) {
+                          return 'El valor debe empezar por 9';
+                        }
+                        return null;
+                      },
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[1-9]')),
+                      ],
                       keyboardType: TextInputType.number,
                     ),
                   ],
@@ -890,14 +1193,16 @@ class _ClientesPageAdminState extends State<ClientesPageAdmin> {
         actions: <Widget>[
           ElevatedButton.icon(
             onPressed: () {
-              _crearCliente(
-                  nombre.text,
-                  apellido_paterno.text,
-                  apellido_materno.text,
-                  dateNacimiento,
-                  selectedTipoDocumento,
-                  numero_documento.text,
-                  telefono.text);
+              if (_formKey.currentState!.validate()) {
+                _crearCliente(
+                    nombre.text,
+                    apellido_paterno.text,
+                    apellido_materno.text,
+                    dateNacimiento,
+                    selectedTipoDocumento,
+                    numero_documento.text,
+                    telefono.text);
+              }
             },
             icon: Icon(Icons.save_rounded),
             label: Text("Guardar"),
